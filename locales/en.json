@@ -2,6 +2,8 @@
   "Checklists": "Checklists",
   "open": "open",
   "save": "save",
+  "edit": "edit",
+  "done": "done",
   "load": "load",
   "create checklist": "create checklist",
   "create item": "create item",
@@ -29,5 +31,6 @@
   "Description of new item": "Description of new item",
   "up": "up",
   "down": "down",
-  "Do you really want to remove this item?": "Do you really want to remove this item?"
+  "Do you really want to remove this item?": "Do you really want to remove this item?",
+  "Checklist already exists. Do you want to overwrite write?": "Checklist already exists. Do you want to overwrite write?"
 }

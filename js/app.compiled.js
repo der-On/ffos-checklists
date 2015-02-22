@@ -88,10 +88,30 @@ var Checklist = module.exports = function Checklist(data)
     items: data.items || []
   };
 
-  checklist.save = function(filename)
+  checklist.save = function(overwrite, filename)
   {
-    checklist.filename = filename || 'sdcard:/checklists/' + checklist.name + '.json';
-    return promisify(fs, fs.writeFile, checklist.filename, checklist.toString());
+    checklist.filename = filename || 'sdcard:/checklists/' + checklist.name.toLowerCase().replace(/\s/g, '_') + '.json';
+
+    if (!overwrite) {
+      return new Promise(function(resolve, reject) {
+        promisify(fs, fs.exists, checklist.filename)
+        .then(function(exists) {
+          if (exists) {
+            if (!confirm(t('Checklist already exists. Do you want to overwrite write?'))) {
+              reject(new Error('Checklist already exists.'));
+              return;
+            }
+          }
+          checklist.overwriten = true;
+          return promisify(fs, fs.writeFile, checklist.filename, checklist.toString());
+        })
+        .then(resolve)
+        .catch(reject);
+      });
+    }
+    else {
+      return promisify(fs, fs.writeFile, checklist.filename, checklist.toString());
+    }
   };
 
   checklist.addItem = function(item)
@@ -271,7 +291,7 @@ function itemView(ctrl, checklist, item, i)
       m('input[type="checkbox"]'),
       m('span')
     ]),
-    m('aside.pack-end', {style:'display: block' }, [
+    m('aside.pack-end', {style: checklist.edit ? 'display: block' : '' }, [
       i > 0 ?
       m('a.move-item-btn[href="javascript:;"]', {
         onclick: checklist.moveItemUp.bind(checklist, i)
@@ -298,17 +318,19 @@ function view(ctrl)
       m('ul[data-type="edit"]', checklist.items.map(itemView.bind(null, ctrl, checklist)))
     ),
 
-    m('input[type="text"]', {
-      placeholder: t('Description of new item'),
-      value: ctrl.newItem,
-      oninput: function(e) {
-        var value = e.target.value;
-        ctrl.newItem = value;
-      }
-    }),
-    m('a.button[href="javascript:;"]', {
+    checklist.edit ? [
+      m('input[type="text"]', {
+        placeholder: t('Description of new item'),
+        value: ctrl.newItem,
+        oninput: function(e) {
+          var value = e.target.value;
+          ctrl.newItem = value;
+        }
+      }),
+      m('a.button[href="javascript:;"]', {
       onclick: ctrl.add
     }, t('create item'))
+    ] : null
   ];
 }
 
@@ -335,6 +357,15 @@ function controller(mainCtrl)
     ctrl.mainCtrl.checklist = checklist;
   };
 
+  function checklistIndexByFilename(filename)
+  {
+    for (var i = 0; i < ctrl.mainCtrl.checklists.length; i++) {
+      if (ctrl.mainCtrl.checklists.filename === filename) return i;
+    }
+
+    return -1;
+  }
+
   ctrl.add = function() {
     var name = ctrl.newName.trim();
     if (!name.length) return;
@@ -345,11 +376,18 @@ function controller(mainCtrl)
       name: name
     });
 
-    ctrl.mainCtrl.checklists.push(checklist);
-
     m.startComputation();
     checklist.save()
     .then(function() {
+      checklist.edit = true;
+      if (checklist.overwriten) {
+        var index = checklistIndexByFilename(checklist.filename);
+        ctrl.mainCtrl.checklists.splice(index, 1, checklist);
+      }
+      else {
+        ctrl.mainCtrl.checklists.push(checklist);
+      }
+
       mainCtrl.checklist = checklist;
       m.endComputation();
     })
@@ -413,7 +451,8 @@ function view(ctrl)
         var el = e.target;
         var value = el.value;
         ctrl.newName = el.value;
-      }
+      },
+      value: ctrl.newName
     }),
     m('a.button', {
       onclick: ctrl.add
@@ -441,11 +480,16 @@ function controller(mainCtrl)
     ctrl.mainCtrl.checklist = null;
   };
 
+  ctrl.editChecklist = function()
+  {
+    ctrl.mainCtrl.checklist.edit = true;
+  };
 
   ctrl.saveChecklist = function()
   {
+    ctrl.mainCtrl.checklist.edit = false;
     m.startComputation();
-    ctrl.mainCtrl.checklist.save()
+    ctrl.mainCtrl.checklist.save(true)
     .then(function() {
       m.endComputation();
     })
@@ -465,9 +509,13 @@ function view(ctrl)
     m('header', [
       (ctrl.mainCtrl.checklist) ? [
         m('menu[type="toolbar"]', [
+         ctrl.mainCtrl.checklist.edit ?
          m('a.button[href="javascript:;"', {
            onclick: ctrl.saveChecklist
-         }, t('save'))
+         }, t('done'))
+         : m('a.button[href="javascript:;"', {
+           onclick: ctrl.editChecklist
+         }, t('edit'))
         ]),
         m('a[href="javascript:;"', {
           onclick: ctrl.closeChecklist,
