@@ -210,7 +210,6 @@ require('es6-promise').polyfill();
 require('./extend_promises')(Promise);
 var global = (window || global);
 var translate = require('translate.js');
-var request = require('superagent');
 var t = global.t = null;
 var locale = 'en';
 var m = require('mithril');
@@ -240,19 +239,26 @@ m.submodule = function(/*module, arg1, ..., argN*/) {
 var app = require('./app');
 
 // load translations
-request.get('/locales/' + locale + '.json',
-  function(err, res) {
-    if (err) throw err;
+var req = new XMLHttpRequest();
+req.open('GET', 'locales/' + locale + '.json', true);
+req.responseType = 'json';
+req.onload = function()
+{
+  var data = req.response;
 
-    global.t = translate(res.body, {
-      debug: true,
-      namespaceSplitter: '.'
-    });
+  global.t = translate(data, {
+    debug: true,
+    namespaceSplitter: '.'
+  });
 
-    app();
-  }
-);
-},{"./app":1,"./checklist":2,"./extend_promises":3,"es6-promise":"es6-promise","ffos-fs":9,"mithril":"mithril","superagent":"superagent","translate.js":"translate.js"}],5:[function(require,module,exports){
+  app();
+};
+req.onerror = function(error)
+{
+  if (err) throw err;
+};
+req.send();
+},{"./app":1,"./checklist":2,"./extend_promises":3,"es6-promise":"es6-promise","ffos-fs":9,"mithril":"mithril","translate.js":"translate.js"}],5:[function(require,module,exports){
 "use strict";
 
 var m = require('mithril');
