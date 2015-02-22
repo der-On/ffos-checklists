@@ -90,7 +90,7 @@ var Checklist = module.exports = function Checklist(data)
 
   checklist.save = function(overwrite, filename)
   {
-    checklist.filename = filename || 'sdcard:/checklists/' + checklist.name.toLowerCase().replace(/\s/g, '_') + '.json';
+    checklist.filename = filename || 'sdcard:checklists/' + checklist.name.toLowerCase().replace(/\s/g, '_') + '.json';
 
     if (!overwrite) {
       return new Promise(function(resolve, reject) {
