@@ -477,6 +477,7 @@ function controller(mainCtrl)
 
   ctrl.closeChecklist = function()
   {
+    ctrl.mainCtrl.checklist.edit = false;
     ctrl.mainCtrl.checklist = null;
   };
 
