@@ -1,0 +1,15 @@
+menu[type="buttons"] {
+  float: right;
+}
+menu[type="buttons"] button,
+menu[type="buttons"] .button {
+  width: auto !important;
+  display: inline-block !important;
+  margin-left: 1em;
+}
+menu[type="buttons"]:after {
+  content: '';
+  display: block;
+  clear: both;
+  width: 100%;
+}

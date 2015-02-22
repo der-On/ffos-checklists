@@ -1,0 +1,28 @@
+{
+  "name": "checklists",
+  "version": "0.0.1",
+  "description": "Create checklists",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ondrej Brinkel <info@anzui.de>",
+  "license": "MIT",
+  "devDependencies": {
+    "node-static": "^0.7.3",
+    "browserify": "^4.1.7",
+    "jake": "^8.0.10",
+    "jake-web-utils": "^0.1.5"
+  },
+  "dependencies": {
+    "es6-promise": "^2.0.1",
+    "ffos-fs": "0.0.4",
+    "font-awesome": "^4.3.0",
+    "mithril": "^0.1.30",
+    "superagent": "^0.21.0",
+    "translate.js": "0.0.2"
+  }
+}

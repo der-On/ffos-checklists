@@ -1,0 +1,32 @@
+{
+  "Checklists": "Checklists",
+  "open": "open",
+  "save": "save",
+  "load": "load",
+  "create checklist": "create checklist",
+  "create item": "create item",
+  "Name": "Name",
+  "Items": "Items",
+  "close": "close",
+  "remove": "remove",
+  "back": "back",
+  "errors": {
+    "checklist": {
+      "save": "Error while saving checklist.",
+      "create": "Cannot create checklist.",
+      "remove": "Error while removing checklist."
+    }
+  },
+  "success": {
+    "checklist": {
+      "save": "Checklist was saved successfully."
+    }
+  },
+  "Loading checklists": "Loading checklists",
+  "No checklists yet.": "No checklists yet.",
+  "Are you sure you want to remove this checklist?": "Are you sure you want to remove this checklist?",
+  "Name for new checklist": "Name for new checklist",
+  "Description of new item": "Description of new item",
+  "up": "up",
+  "down": "down"
+}
