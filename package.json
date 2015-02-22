@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "es6-promise": "^2.0.1",
-    "ffos-fs": "0.0.4",
-    "font-awesome": "^4.3.0",
+    "ffos-fs": "^0.0.5",
     "mithril": "^0.1.30",
     "superagent": "^0.21.0",
     "translate.js": "0.0.2"

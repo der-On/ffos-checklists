@@ -28,5 +28,6 @@
   "Name for new checklist": "Name for new checklist",
   "Description of new item": "Description of new item",
   "up": "up",
-  "down": "down"
+  "down": "down",
+  "Do you really want to remove this item?": "Do you really want to remove this item?"
 }

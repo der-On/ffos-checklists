@@ -23,7 +23,7 @@ var stylusOpts = {
   watchPaths: [path.join(__dirname, 'lib/stylus/*/**.styl')]
 };
 
-task('build', function buildTask() {
+task('build', { async: true }, function buildTask() {
   var wu = require('jake-web-utils');
   wu.compileBrowserify(browserifyOpts, function() {
     wu.compileStylus(stylusOpts, copyFiles);
@@ -44,14 +44,7 @@ task('build', function buildTask() {
       './gaia/**/*',
       './fonts/**/*',
       './css/*.css',
-      './locales/**/*',
-
-      // tests
-      './tests/**/*',
-
-      // font-awesome
-      './node_modules/font-awesome/fonts/fontawesome-webfont.woff',
-      './node_modules/font-awesome/css/font-awesome.min.css'
+      './locales/**/*'
     ]);
 
     var distDir = path.join(__dirname, 'dist');
@@ -81,11 +74,4 @@ task('watch', { async: true }, function watchTask() {
   var wu = require('jake-web-utils');
   wu.watchBrowserify(browserifyOpts);
   wu.watchStylus(stylusOpts);
-});
-
-task('build', { async: true }, function bundleTask() {
-  var wu = require('jake-web-utils');
-  wu.compileBrowserify(browserifyOpts, function() {
-    wu.compileStylues(stylusOpts, complete);
-  });
 });

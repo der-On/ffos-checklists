@@ -28,7 +28,6 @@ function controller() {
       return Promise.series(files.map(function(file) {
         var p = Checklist.load(file)
         .then(function(checklist) {
-          console.log(checklist);
           ctrl.checklists.push(checklist);
         })
         .catch(function(err) {
@@ -107,13 +106,15 @@ var Checklist = module.exports = function Checklist(data)
 
   checklist.moveItemUp = function(index)
   {
-    var item = checklist[index];
+    if (index === 0) return;
+    var item = checklist.items[index];
     checklist.items.splice(index, 1);
-    checklist.items.splice(index, 0, item);
+    checklist.items.splice(index - 1, 0, item);
   };
 
   checklist.moveItemDown = function(index)
   {
+    if (index === checklist.items.length - 1) return;
     var item = checklist.items[index];
     checklist.items.splice(index, 1);
     checklist.items.splice(index + 1, 0, item);
@@ -254,29 +255,37 @@ function controller(mainCtrl)
     return false;
   };
 
+  ctrl.remove = function(index) {
+    if (confirm(t('Do you really want to remove this item?'))) {
+      ctrl.mainCtrl.checklist.removeItem(index);
+    }
+  };
+
   return ctrl;
 }
 
-function itemView(checklist, item, i)
+function itemView(ctrl, checklist, item, i)
 {
   return m('li',
-    m('p', [
-      m('label', [
-        m('input[type="checkbox"]'),
-        item
-      ]),
-      m('menu[type="buttons"]', [
-        m('a.button[href="javascript:;"]', {
-          onclick: checklist.moveItemUp.bind(checklist, i)
-        }, t('up')),
-        m('a.button[href="javascript:;"]', {
-          onclick: checklist.moveItemDown.bind(checklist, i)
-        }, t('down')),
-        m('a.button[href="javascript:;"]', {
-          onclick: checklist.removeItem.bind(checklist, i)
-        }, t('remove'))
-      ])
-    ])
+    m('label.pack-checkbox', [
+      m('input[type="checkbox"]'),
+      m('span')
+    ]),
+    m('aside.pack-end', {style:'display: block' }, [
+      i > 0 ?
+      m('a.move-item-btn[href="javascript:;"]', {
+        onclick: checklist.moveItemUp.bind(checklist, i)
+      }, t('up')) : null,
+      i < checklist.items.length - 1 ?
+      m('a.move-item-btn[href="javascript:;"]', {
+        onclick: checklist.moveItemDown.bind(checklist, i)
+      }, t('down')) : null,
+      m('a.remove-item-btn.gaia-icon.icon-delete[href="javascript:;"]', {
+        onclick: ctrl.remove.bind(ctrl, i),
+        title: t('remove')
+      })
+    ]),
+    m('a[href="javascript:;"]', m('p', item))
   );
 }
 
@@ -285,9 +294,10 @@ function view(ctrl)
   var checklist = ctrl.mainCtrl.checklist;
 
   return [
-    m('ul[data-type="list"]',
-      checklist.items.map(itemView.bind(null, checklist))
+    m('section[data-type="list"]',
+      m('ul[data-type="edit"]', checklist.items.map(itemView.bind(null, ctrl, checklist)))
     ),
+
     m('input[type="text"]', {
       placeholder: t('Description of new item'),
       value: ctrl.newItem,
@@ -375,25 +385,27 @@ function controller(mainCtrl)
 }
 
 function checklistView(ctrl, checklist, i) {
-  return m('li',m('p',
-    m('a[href="javascript:;"',{
-      onclick: ctrl.open.bind(ctrl, checklist)
-    }, checklist.name),
-    m('menu[type="buttons"]', [
-      m('a.button[href="javascript:;"]', {
-        onclick: ctrl.remove.bind(ctrl, i),
-        title: t('remove')
-      }, m('span.icon.icon-close', t('remove')))
-    ])
-  ));
+  return m('li', [
+    m('aside.pack-end',
+        m('a.gaia-icon.icon-delete[href="javascript:;"]', {
+          onclick: ctrl.remove.bind(ctrl, i),
+          title: t('remove')
+        })
+    ),
+    m('p', [
+      m('a[href="javascript:;"', {
+        onclick: ctrl.open.bind(ctrl, checklist)
+      }, checklist.name)
+    ]),
+  ]);
 }
 
 function view(ctrl)
 {
   return [
-    ctrl.mainCtrl.checklists.length ? [
-      m('ul[data-type="list"]', ctrl.mainCtrl.checklists.map(checklistView.bind(null, ctrl)))
-    ] : m('ul[data-type="list"]', m('li', m('p', t('No checklists yet.')))),
+    ctrl.mainCtrl.checklists.length ?
+    m('ul[data-type="list"]', ctrl.mainCtrl.checklists.map(checklistView.bind(null, ctrl)))
+    : m('ul[data-type="list"]', m('li', m('p', t('No checklists yet.')))),
 
     m('input[type="text"]', {
       placeholder: t('Name for new checklist'),
@@ -429,6 +441,21 @@ function controller(mainCtrl)
     ctrl.mainCtrl.checklist = null;
   };
 
+
+  ctrl.saveChecklist = function()
+  {
+    m.startComputation();
+    ctrl.mainCtrl.checklist.save()
+    .then(function() {
+      m.endComputation();
+    })
+    .catch(function(err) {
+      console.error(err);
+      alert(t('errors.checklist.save'));
+      m.endComputation();
+    });
+  };
+
   return ctrl;
 }
 
@@ -439,7 +466,7 @@ function view(ctrl)
       (ctrl.mainCtrl.checklist) ? [
         m('menu[type="toolbar"]', [
          m('a.button[href="javascript:;"', {
-           onclick: ctrl.save
+           onclick: ctrl.saveChecklist
          }, t('save'))
         ]),
         m('a[href="javascript:;"', {

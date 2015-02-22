@@ -1,3 +1,42 @@
+* { font-family: 'FiraSans'; }
+
+@font-face {
+  font-family: 'FiraSans';
+  src: url('../fonts/FiraSans-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FiraSans';
+  src: url('../fonts/FiraSans-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FiraSans';
+  src: url('../fonts/FiraSans-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FiraSans';
+  src: url('../fonts/FiraSans-Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+}
+
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-size:10px;
+  background: #fff;
+}
+
+body {
+  position: relative;
+}
+
 menu[type="buttons"] {
   float: right;
 
@@ -14,3 +53,6 @@ menu[type="buttons"] {
     width: 100%;
   }
 }
+
+@import "modules/_icons";
+@import "modules/_checklist";
