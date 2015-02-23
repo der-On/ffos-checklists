@@ -88,3 +88,20 @@ a.gaia-icon:visited {
   text-align: center;
   font-size: 100%;
 }
+li.checklist-item p {
+  white-space: normal;
+  line-height: inherit !important;
+  position: relative;
+}
+li.checklist-item,
+li.checklist-item > a {
+  min-height: 6rem;
+  height: auto;
+}
+li.checklist-item a {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+li.checklist-item .pack-checkbox {
+  top: -2.4rem;
+}

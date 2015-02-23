@@ -234,7 +234,7 @@ if (!navigator.getDeviceStorage) {
   var Checklist = require('./checklist');
   var checklist = Checklist({
     name: 'test',
-    items: ['test1', 'test2', 'test3', 'test4']
+    items: ['test1 really long item. With multiple sentences. And probably three lines of text or much much much much more.', 'test2', 'test3', 'test4']
   });
 
   checklist.save();
@@ -304,7 +304,7 @@ function controller(mainCtrl)
 
 function itemView(ctrl, checklist, item, i)
 {
-  return m('li',
+  return m('li.checklist-item',
     m('label.pack-checkbox', [
       m('input[type="checkbox"]'),
       m('span')
@@ -333,7 +333,7 @@ function view(ctrl)
 
   return [
     m('section[data-type="list"]',
-      m('ul[data-type="edit"]', checklist.items.map(itemView.bind(null, ctrl, checklist)))
+      m('ul.checklist-items[data-type="edit"]', checklist.items.map(itemView.bind(null, ctrl, checklist)))
     ),
 
     checklist.edit ? [
