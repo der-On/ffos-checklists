@@ -57,6 +57,12 @@ menu[type="buttons"]:after {
 }
 a.gaia-icon {
   left: -3em;
+  color: #666 !important;
+}
+a.gaia-icon:focus,
+a.gaia-icon:active,
+a.gaia-icon:visited {
+  color: #666 !important;
 }
 .move-item-btn {
   background: #eee;
@@ -75,4 +81,10 @@ a.gaia-icon {
 }
 .remove-item-btn {
   top: -1.2em;
+}
+.header h1 > input[type="text"] {
+  position: relative;
+  top: 0.1em;
+  text-align: center;
+  font-size: 100%;
 }
