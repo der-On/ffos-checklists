@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "es6-promise": "^2.0.1",
-    "ffos-fs": "^0.0.5",
+    "ffos-fs": "^0.0.8",
     "mithril": "^0.1.30",
     "translate.js": "0.0.2"
   }

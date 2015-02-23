@@ -12,18 +12,10 @@
   "close": "close",
   "remove": "remove",
   "back": "back",
-  "errors": {
-    "checklist": {
-      "save": "Error while saving checklist.",
-      "create": "Cannot create checklist.",
-      "remove": "Error while removing checklist."
-    }
-  },
-  "success": {
-    "checklist": {
-      "save": "Checklist was saved successfully."
-    }
-  },
+  "errors.checklist.save": "Error while saving checklist.",
+  "errors.checklist.create": "Cannot create checklist.",
+  "errors.checklist.remove": "Error while removing checklist.",
+  "success.checklist.save": "Checklist was saved successfully.",
   "Loading checklists": "Loading checklists",
   "No checklists yet.": "No checklists yet.",
   "Are you sure you want to remove this checklist?": "Are you sure you want to remove this checklist?",

@@ -23,10 +23,14 @@ function controller() {
     ctrl.checklists.splice(0, ctrl.checklists.length);
 
     // load checklists
-    promisify(fs, fs.readdir, 'sdcard:/checklists')
+    promisify(fs, fs.readdir, 'sdcard:checklists')
     .then(function(files) {
+      files = files.filter(function(file) {
+        return (file.name.substr(-('.checklist.json').length) === '.checklist.json');
+      });
+
       return Promise.series(files.map(function(file) {
-        var p = Checklist.load(file)
+        var p = Checklist.load('sdcard:' + file.name)
         .then(function(checklist) {
           ctrl.checklists.push(checklist);
         })
@@ -90,28 +94,36 @@ var Checklist = module.exports = function Checklist(data)
 
   checklist.save = function(overwrite, filename)
   {
-    checklist.filename = filename || 'sdcard:checklists/' + checklist.name.toLowerCase().replace(/\s/g, '_') + '.json';
+    checklist.filename = filename || 'sdcard:checklists/' + checklist.name.toLowerCase().replace(/\s/g, '_') + '.checklist.json';
 
-    if (!overwrite) {
-      return new Promise(function(resolve, reject) {
-        promisify(fs, fs.exists, checklist.filename)
-        .then(function(exists) {
-          if (exists) {
+    return new Promise(function(resolve, reject) {
+      promisify(fs, fs.exists, checklist.filename)
+      .then(function(exists) {
+        if (exists) {
+          if (!overwrite) {
             if (!confirm(t('Checklist already exists. Do you want to overwrite write?'))) {
               reject(new Error('Checklist already exists.'));
               return;
             }
           }
+
           checklist.overwriten = true;
-          return promisify(fs, fs.writeFile, checklist.filename, checklist.toString());
-        })
-        .then(resolve)
-        .catch(reject);
-      });
-    }
-    else {
-      return promisify(fs, fs.writeFile, checklist.filename, checklist.toString());
-    }
+
+          // overwriting files does not work yet in ffos-fs so we manually need to delete it first
+          promisify(fs, fs.unlink, checklist.filename)
+          .then(function() {
+            return promisify(fs, fs.writeFile, checklist.filename, checklist.toString(), {mimetype: 'application/json'});
+          })
+          .then(resolve)
+          .catch(reject);
+        }
+        else {
+          return promisify(fs, fs.writeFile, checklist.filename, checklist.toString(), {mimetype: 'application/json'})
+        }
+      })
+      .then(resolve)
+      .catch(reject);
+    });
   };
 
   checklist.addItem = function(item)
@@ -494,9 +506,10 @@ function controller(mainCtrl)
 
   ctrl.saveChecklist = function()
   {
-    ctrl.mainCtrl.checklist.edit = false;
+    var checklist = ctrl.mainCtrl.checklist;
+    checklist.edit = false;
     m.startComputation();
-    ctrl.mainCtrl.checklist.save(true)
+    checklist.save(true, checklist.filename)
     .then(function() {
       m.endComputation();
     })
@@ -573,6 +586,8 @@ module.exports = function(/*thisArg, fn, arg1, arg..., argN*/)
   });
 };
 },{}],9:[function(require,module,exports){
+var mock = require('./mock');
+
 module.exports = new (function() {
   function hasDeviceStorage()
   {
@@ -636,7 +651,7 @@ module.exports = new (function() {
     }
     else if(fd instanceof File)
     {
-      self.open(fd.name, 'w', callback);
+      self.open(fd.fullname || fd.name, 'w', callback);
       return;
     }
     else if (fd instanceof FileHandle)
@@ -684,8 +699,8 @@ module.exports = new (function() {
    */
   this.mock = function()
   {
+    mock();
     mocked = true;
-    require('./mock')();
     console.warn('Using in memory mock for filesystem now.');
   };
 
@@ -732,20 +747,25 @@ module.exports = new (function() {
     }
 
     if (mocked) {
-      var storage = getStorageForPath(path);
-      if (storage) {
-        callback(null, (storage.files[path]) ? true : false);
-      }
-      else {
-        callback(new Error('Unable to find entry point for ' + path + '.'));
-      }
+      existsMock(path, callback);
       return;
     }
 
     this.open(path, 'r', function(error, file) {
-      callback(null, (error) ? false : true);
+      callback(null, (error || !file) ? false : true);
     });
   };
+
+  function existsMock(path, callback)
+  {
+    var storage = getStorageForPath(path);
+    if (storage) {
+      callback(null, (storage.files[path]) ? true : false);
+    }
+    else {
+      callback(new Error('Unable to find entry point for ' + path + '.'));
+    }
+  }
 
   this.read = function(fd, blob, offset, length, position, callback)
   {
@@ -803,49 +823,7 @@ module.exports = new (function() {
     };
 
     if (mocked) {
-      var storage = getStorageForPath(filename);
-
-      if (!storage) {
-        callback(new Error('Unable to find entry point for ' + filename + '.'));
-        return;
-      }
-
-      var file = storage.files[filename] || null;
-
-      if (file) {
-        switch(options.format) {
-          case 'text':
-            file = file.toString();
-            break;
-
-          case 'binary':
-            file = file.toString();
-            break;
-
-          case 'dataURL':
-            if (typeof file === 'string') {
-              var buffer = new ArrayBuffer(file.length);
-              for (var i = 0; i < file.length; i++) {
-                buffer[i] = file.charCodeAt(i);
-              }
-              file = buffer.toDataURL();
-            }
-
-          case 'buffer':
-            if (typeof file === 'string') {
-              var buffer = new ArrayBuffer(file.length);
-              for (var i = 0; i < file.length; i++) {
-                buffer[i] = file.charCodeAt(i);
-              }
-              file = buffer;
-            }
-
-          default:
-            file = file.toString();
-        }
-      }
-
-      callback(null, file);
+      readFileMock(filename, options, callback);
       return;
     }
 
@@ -895,6 +873,43 @@ module.exports = new (function() {
     });
   };
 
+  function readFileMock(filename, options, callback)
+  {
+    var storage = getStorageForPath(filename);
+
+    if (!storage) {
+      callback(new Error('Unable to find entry point for ' + filename + '.'));
+      return;
+    }
+
+    var file = storage.files[filename] || null;
+    var data = null;
+    if (file) {
+      switch(options.format) {
+        case 'text':
+          data = file.toText();
+          break;
+
+        case 'binary':
+          data = file.toBinaryString();
+          break;
+
+        case 'dataURL':
+          data = file.toDataURL();
+          break;
+
+        case 'buffer':
+          data = file.toArrayBuffer();
+          break;
+
+        default:
+          data = file.toText();
+      }
+    }
+
+    callback(null, data);
+  }
+
   this.write = function(fd, buffer, offset, length, position, callback)
   {
     if (typeof callback !== 'function') {
@@ -905,7 +920,8 @@ module.exports = new (function() {
       throw new Error('Missing File.');
       return;
     }
-    if (!buffer || !(buffer instanceof ArrayBuffer) || typeof buffer !== 'string') {
+
+    if (!buffer || (!(buffer instanceof ArrayBuffer) && typeof buffer !== 'string')) {
       throw new Error('Missing or invalid Buffer.');
       return;
     }
@@ -917,8 +933,8 @@ module.exports = new (function() {
       }
 
       var offset = offset || 0;
-      var length = length || buffer.lenght;
-      if (length > buffer.lenght) {
+      var length = length || buffer.length;
+      if (length > buffer.length) {
         length = buffer.length;
       }
       var position = position || 0;
@@ -965,6 +981,11 @@ module.exports = new (function() {
         return;
       }
 
+      if (mocked) {
+        writeFileMock(filename, data, options, callback);
+        return;
+      }
+
       var storage = getStorageForPath(filename);
 
       if (!storage) {
@@ -972,26 +993,58 @@ module.exports = new (function() {
         return;
       }
 
-      if (mocked) {
-        storage.files[filename] = data;
-        callback(null);
-        return;
+      // get existing file for writing
+      if (exists) {
+        self.open(filename, options, function(err, fd) {
+          if (err) {
+            callback(err);
+            return;
+          }
+
+          // TODO: convert blob data to ArrayBuffer here?
+          var buffer = data;
+          fd.fullname = filename;
+
+          self.write(fd, buffer, 0, buffer.length, 0, function(err) {
+            if (err) {
+              callback(err);
+              return;
+            }
+
+            callback(null);
+          });
+        });
       }
+      // create new file
+      else {
+        var file = (data instanceof Blob) ? data : new Blob([data], { type: options.mimetype });
+        var filepath = getPathWithoutStorageType(filename);
 
-      var file = (data instanceof Blob) ? data : new Blob([data], { type: options.mimetype });
-      var filepath = getPathWithoutStorageType(filename);
-
-      var request = storage.addNamed(file, filepath);
-      request.onsuccess = function()
-      {
-        callback(null);
-      };
-      request.onerror = function()
-      {
-        callback(this.error);
-      };
+        var request = storage.addNamed(file, filepath);
+        request.onsuccess = function()
+        {
+          callback(null);
+        };
+        request.onerror = function()
+        {
+          callback(this.error);
+        };
+      }
     });
   };
+
+  function writeFileMock(filename, data, options, callback)
+  {
+    var storage = getStorageForPath(filename);
+
+    if (!storage) {
+      callback(new Error('Unable to find entry point for ' + filename + '.'));
+      return;
+    }
+
+    storage.files[filename] = new mock.FileMock(filename, options.mimetype, data);
+    callback(null);
+  }
 
   this.readdir = function(path, callback)
   {
@@ -1044,8 +1097,7 @@ module.exports = new (function() {
     }
 
     if (mocked) {
-      delete storage.files[path];
-      callback(null);
+      unlinkMock(path, callback);
       return;
     }
 
@@ -1059,9 +1111,67 @@ module.exports = new (function() {
       callback(this.error);
     };
   };
+
+  function unlinkMock(path, callback)
+  {
+    var storage = getStorageForPath(path);
+    if (!storage) {
+      callback(new Error('Unable to find entry point for ' + path + '.'));
+      return;
+    }
+
+    delete storage.files[path];
+    callback(null);
+  }
 })();
 },{"./mock":10}],10:[function(require,module,exports){
 "use strict";
+
+var FileMock = function(filename, type, data)
+{
+  var self = this;
+  this.name = filename.split(':', 2)[1];
+  this.lastModifiedDate = new Date();
+  this.size = 0;
+  this.type = 'text/plain';
+  this.data = data;
+  this.blob = new Blob([data], {
+    type: this.type
+  });
+  this.buffer = getArrayBuffer();
+
+  this.slice = this.blob.slice.bind(this.blob);
+
+  this.toText = function()
+  {
+    return this.data.toString();
+  };
+
+  this.toBinaryString = function()
+  {
+    return this.data.toString();
+  };
+
+  this.toDataURL = function()
+  {
+    return this.data.toString();
+  };
+
+  this.toArrayBuffer = function()
+  {
+    return this.buffer;
+  };
+
+  function getArrayBuffer()
+  {
+    var buffer = new ArrayBuffer(self.data.length);
+    for(var i = 0; i < self.data.length; i++) {
+      buffer[i] = self.data[i];
+    }
+
+    return buffer;
+  }
+};
 
 var Storage = function(type)
 {
@@ -1074,7 +1184,7 @@ var Storage = function(type)
     var files = [];
     Object.keys(self.files).forEach(function(file) {
       if (file.indexOf(path) === 0) {
-        files.push(file);
+        files.push(self.files[file]);
       }
     });
 
@@ -1095,6 +1205,8 @@ module.exports = function() {
     return storages[type] || null;
   };
 };
+module.exports.Storage = Storage;
+module.exports.FileMock = FileMock;
 },{}]},{},[4])
 
 
