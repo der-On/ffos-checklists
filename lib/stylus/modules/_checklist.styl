@@ -1,20 +1,7 @@
-.move-item-btn {
-  background: #eee;
-  border-radius: 3px;
-  color: #000;
-  padding: 0.5em;
-  margin-right: 1em;
-  font-size: 150%;
-  text-decoration: none;
-  display: inline-block;
-  vertical-align: middle;
-  width: 3em;
-  text-align: center;
-  position: relative;
-  top: 0.5em;
-}
-.remove-item-btn {
-  top: -1.2em;
+a.gaia-icon.move-item-btn {
+  transform: rotate(90deg);
+  left: 2rem;
+  top: -1rem;
 }
 
 .header h1 > input[type="text"] {
@@ -39,4 +26,13 @@ li.checklist-item a {
 }
 li.checklist-item .pack-checkbox {
   top: -2.4rem;
+}
+li.checklist-item.edit {
+  padding-left: 0;
+
+  input[type="text"] {
+    position: relative;
+    top: 1rem;
+    max-width: 70%;
+  }
 }

@@ -64,8 +64,10 @@ function view(ctrl)
 {
   return [
     ctrl.headerModule(),
-    ctrl.loading ? m('p', t('Loading checklists')) : null,
-    ctrl.checklist ? ctrl.checklistModule() : ctrl.checklistsModule()
+    m('section[role="main"]', [
+      ctrl.loading ? m('p', t('Loading checklists')) : null,
+      ctrl.checklist ? ctrl.checklistModule() : ctrl.checklistsModule()
+    ])
   ]
 }
 
@@ -134,6 +136,22 @@ var Checklist = module.exports = function Checklist(data)
   checklist.removeItem = function(index)
   {
     checklist.items.splice(index, 1);
+  };
+
+  checklist.setItem = function(index, item)
+  {
+    if (index >= 0 && index < checklist.items.length) {
+      checklist.items[index] = item;
+    }
+  };
+
+  checklist.getItem = function(index)
+  {
+    if (index >= 0 && index < checklist.items.length) {
+      return checklist.items[index];
+    }
+
+    return null;
   };
 
   checklist.moveItemUp = function(index)
@@ -304,26 +322,36 @@ function controller(mainCtrl)
 
 function itemView(ctrl, checklist, item, i)
 {
-  return m('li.checklist-item',
-    m('label.pack-checkbox', [
+  return m('li.checklist-item' + (checklist.edit ? '.edit' : ''),
+    m('label.pack-checkbox', {
+      style: checklist.edit ? 'display:none' : ''
+    }, [
       m('input[type="checkbox"]'),
       m('span')
     ]),
     m('aside.pack-end', {style: checklist.edit ? 'display: block' : '' }, [
       i > 0 ?
-      m('a.move-item-btn[href="javascript:;"]', {
-        onclick: checklist.moveItemUp.bind(checklist, i)
-      }, t('up')) : null,
+      m('a.move-item-btn.gaia-icon.icon-back[href="javascript:;"]', {
+        onclick: checklist.moveItemUp.bind(checklist, i),
+        title: t('up')
+      }) : null,
       i < checklist.items.length - 1 ?
-      m('a.move-item-btn[href="javascript:;"]', {
-        onclick: checklist.moveItemDown.bind(checklist, i)
-      }, t('down')) : null,
+      m('a.move-item-btn.gaia-icon.icon-foward[href="javascript:;"]', {
+        onclick: checklist.moveItemDown.bind(checklist, i),
+        title: t('down')
+      }) : null,
       m('a.remove-item-btn.gaia-icon.icon-delete[href="javascript:;"]', {
         onclick: ctrl.remove.bind(ctrl, i),
         title: t('remove')
       })
     ]),
-    m('a[href="javascript:;"]', m('p', item))
+    checklist.edit ?
+    m('input[type="text"]', {
+      value: item,
+      oninput: function(e) {
+        checklist.setItem(i, e.target.value);
+      }
+    }) : m('a[href="javascript:;"]', m('p', item))
   );
 }
 
@@ -343,6 +371,11 @@ function view(ctrl)
         oninput: function(e) {
           var value = e.target.value;
           ctrl.newItem = value;
+        },
+        onkeyup: function(e) {
+          if (e.keyCode === 13) {
+            ctrl.add();
+          }
         }
       }),
       m('a.button[href="javascript:;"]', {
@@ -469,6 +502,11 @@ function view(ctrl)
         var el = e.target;
         var value = el.value;
         ctrl.newName = el.value;
+      },
+      onkeyup: function(e) {
+        if (e.keyCode === 13) {
+          ctrl.add();
+        }
       },
       value: ctrl.newName
     }),
