@@ -375,6 +375,7 @@ function view(ctrl)
         onkeyup: function(e) {
           if (e.keyCode === 13) {
             ctrl.add();
+            e.target.blur();
           }
         }
       }),
@@ -506,6 +507,7 @@ function view(ctrl)
       onkeyup: function(e) {
         if (e.keyCode === 13) {
           ctrl.add();
+          e.target.blur();
         }
       },
       value: ctrl.newName
