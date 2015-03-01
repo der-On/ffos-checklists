@@ -41,7 +41,7 @@ task('build', { async: true }, function buildTask() {
       './README.md',
       './js/*.js',
       './images/**/*.*',
-      './gaia/**/*',
+      './gaia/**/*.css',
       './fonts/**/*',
       './css/*.css',
       './locales/**/*'
