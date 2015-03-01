@@ -13,6 +13,7 @@ Then do
 
 ```bash
 $ npm install jake -g
+$ npm install
 ```
 
 ## Build
