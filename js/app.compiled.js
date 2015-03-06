@@ -103,7 +103,7 @@ var Checklist = module.exports = function Checklist(data)
       .then(function(exists) {
         if (exists) {
           if (!overwrite) {
-            if (!confirm(t('Checklist already exists. Do you want to overwrite write?'))) {
+            if (!confirm(t('Checklist already exists. Do you want to overwrite it?'))) {
               reject(new Error('Checklist already exists.'));
               return;
             }
