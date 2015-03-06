@@ -30,9 +30,23 @@
     }
   },
   "locales": {
-    "en": {
-      "name": "Checklists",
-      "description": "Create checklists"
+    "eo": {
+      "name": "Markolistoj",
+      "description": "Aplikaĵo por krei markolistojn"
+      "permissions": {
+        "device-storage:sdcard": {
+          "description": "Por konservi kaj ŝargi markolistojn"
+        }
+      }
+    },
+    "it": {
+      "name": "Liste",
+      "description": "App per creare liste"
+      "permissions": {
+        "device-storage:sdcard": {
+          "description": "Per salvare e caricare le liste"
+        }
+      }
     }
   }
 }
